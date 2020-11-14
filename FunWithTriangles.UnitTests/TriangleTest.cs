@@ -13,7 +13,7 @@ namespace FunWithTriangles.UnitTests
         [InlineData(1, 0, 0, false)]
         [InlineData(1, 0, 1, false)]
         [InlineData(1, 1, 0, false)]
-        public void ISConstructable_MissingEdge_ReturnsFalse(Int64 a, Int64 b, Int64 c, bool expectedResult)
+        public void ISConstructable_MissingEdge_ReturnsFalse(double a, double b, double c, bool expectedResult)
         {
             var triangle = new Triangle() {EdgeA = a, EdgeB = b, EdgeC = c};
             var result = triangle.IsConstructable();
@@ -32,7 +32,7 @@ namespace FunWithTriangles.UnitTests
         [InlineData(3, 3, 10, false)]
         [InlineData(3, 10, 3, false)]
         [InlineData(10, 3, 3, false)]
-        public void IsConstructable_TwoEdgesAreIncredibleShort_ReturnsFalse(Int64 a, Int64 b, Int64 c,
+        public void IsConstructable_TwoEdgesAreIncredibleShort_ReturnsFalse(double a, double b, double c,
             bool expectedResult)
         {
             var triangle = new Triangle() {EdgeA = a, EdgeB = b, EdgeC = c};
