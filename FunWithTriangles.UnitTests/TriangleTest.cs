@@ -1,7 +1,7 @@
-﻿using System;
+﻿using FunWithTriangles;
 using Xunit;
 
-namespace FunWithTriangles.UnitTests
+namespace TestFunWithTriangles
 {
     public class TriangleTests
     {
@@ -73,14 +73,6 @@ namespace FunWithTriangles.UnitTests
             var triangle = new Triangle() {EdgeA = 480, EdgeB = 350, EdgeC = 620};
 
             Assert.Equal(180, triangle.GetAlpha() + triangle.GetBeta() + triangle.GetGamma(), 4);
-        }
-
-        [Fact]
-        public void GetLargestAngle__ReturnsGamma()
-        {
-            var triangle = new Triangle() {EdgeA = 480, EdgeB = 350, EdgeC = 620};
-
-            Assert.Equal(Angle.Gamma, triangle.GetLargestAngle());
         }
     }
 }

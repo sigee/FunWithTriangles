@@ -1,21 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace FunWithTriangles
 {
     public partial class Form1 : Form
     {
-        private Triangle triangle;
-        private List<Triangle> triangles;
-        private DataGridView dataGridView;
-
+        private Triangle _triangle;
+        private DataGridView _dataGridView;
 
         public Form1()
         {
             InitializeComponent();
-            CreateList();
             CreateMenu();
             CreateTriangle();
             CreateDataGridView();
@@ -26,58 +23,53 @@ namespace FunWithTriangles
             var selectedRows = ((DataGridView) sender).SelectedRows;
             if (selectedRows.Count != 1 || selectedRows[0].IsNewRow)
             {
-                triangle.EdgeA = 0;
-                triangle.EdgeB = 0;
-                triangle.EdgeC = 0;
-                triangle.Text = "";
+                _triangle.EdgeA = 0;
+                _triangle.EdgeB = 0;
+                _triangle.EdgeC = 0;
             }
             else
             {
                 Double.TryParse((string) selectedRows[0].Cells[0].Value, out double edgeA);
                 Double.TryParse((string) selectedRows[0].Cells[1].Value, out double edgeB);
                 Double.TryParse((string) selectedRows[0].Cells[2].Value, out double edgeC);
-                triangle.EdgeA = edgeA;
-                triangle.EdgeB = edgeB;
-                triangle.EdgeC = edgeC;
-
-                triangle.Text = triangle.EdgeA + " | " + triangle.EdgeB + " | " + triangle.EdgeC;
+                _triangle.EdgeA = edgeA;
+                _triangle.EdgeB = edgeB;
+                _triangle.EdgeC = edgeC;
             }
-            triangle.Refresh();
+
+            _triangle.Refresh();
         }
 
         private void CreateTriangle()
         {
-            triangle = new Triangle {Top = 25, Left = 520, Width = 300, Height = 300};
-            Controls.Add(triangle);
-        }
-
-        private void CreateList()
-        {
-            triangles = new List<Triangle>();
-            triangles.Add(new Triangle {EdgeA = 10, EdgeB = 10, EdgeC = 10});
-            triangles.Add(new Triangle {EdgeA = 15, EdgeB = 15, EdgeC = 15});
+            _triangle = new Triangle {Top = 25, Left = 520, Width = 300, Height = 300};
+            Controls.Add(_triangle);
         }
 
         private void CreateDataGridView()
         {
-            dataGridView = new DataGridView {Top = 25, Left = 10, Width = 500, Height = 400};
-            var edgeA = new DataGridViewTextBoxColumn() {HeaderText = "A oldal", DataPropertyName = "EdgeA"};
-            var edgeB = new DataGridViewTextBoxColumn() {HeaderText = "B oldal", DataPropertyName = "EdgeB"};
-            var edgeC = new DataGridViewTextBoxColumn() {HeaderText = "C oldal", DataPropertyName = "EdgeC"};
-            dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-//            dataGridView.DataSource = triangles;
-
-            dataGridView.Columns.AddRange(edgeA, edgeB, edgeC);
-
-            dataGridView.CellEnter += CellEvents;
-            dataGridView.CellValueChanged += CellEvents;
-            foreach (var column in dataGridView.Columns)
+            _dataGridView = new DataGridView {Top = 25, Left = 10, Width = 500, Height = 400};
+            var edgeA = new DataGridViewTextBoxColumn()
+                {HeaderText = "A oldal", DataPropertyName = "EdgeA", Width = 80};
+            var edgeB = new DataGridViewTextBoxColumn()
+                {HeaderText = "B oldal", DataPropertyName = "EdgeB", Width = 80};
+            var edgeC = new DataGridViewTextBoxColumn()
+                {HeaderText = "C oldal", DataPropertyName = "EdgeC", Width = 80};
+            var area = new DataGridViewTextBoxColumn()
             {
-            }
-
-//            dataGridView.Columns["AutoSize"].Visible = false;
-//            dataGridView.Columns["AutoSizeMode"].Visible = false;
-            Controls.Add(dataGridView);
+                HeaderText = "Terület", DataPropertyName = "Area", ReadOnly = true,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            var perimeter = new DataGridViewTextBoxColumn()
+                {HeaderText = "Kerület", DataPropertyName = "Perimeter", ReadOnly = true, Width = 80};
+            _dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            _dataGridView.Columns.AddRange(edgeA, edgeB, edgeC, area, perimeter);
+            _dataGridView.RowCount = 11;
+            _dataGridView.AllowUserToAddRows = false;
+            _dataGridView.AllowUserToDeleteRows = false;
+            _dataGridView.CellEnter += CellEvents;
+            _dataGridView.CellValueChanged += CellEvents;
+            Controls.Add(_dataGridView);
         }
 
         private void CreateMenu()
@@ -90,25 +82,65 @@ namespace FunWithTriangles
             menuItem.DropDownItems.AddRange(new ToolStripItem[] {openMenuItem, saveMenuItem});
 
             openMenuItem.Click += OpenTriangles;
+            saveMenuItem.Click += SaveTriangles;
             Controls.Add(menuStrip);
         }
 
         private void OpenTriangles(object sender, EventArgs eventArgs)
         {
-            OpenFileDialog sfd = new OpenFileDialog();
-            sfd.Filter = "Fun Vith Triangles (*.fvt)|*.fvt";
-            if (sfd.ShowDialog() == DialogResult.OK)
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Fun Vith Triangles (*.fvt)|*.fvt";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                if (File.Exists(sfd.FileName))
+                if (File.Exists(openFileDialog.FileName))
                 {
                     try
                     {
-                        /** @TODO: Load data from file */
+                        var contents = File.ReadAllText(openFileDialog.FileName);
+                        var rows = contents.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
+                        for (var i = 0; i < rows.Length; i++)
+                        {
+                            if (_dataGridView.Rows.Count < i)
+                            {
+                                continue;
+                            }
+
+                            var cells = rows[i].Split(',');
+                            if (cells.Length != 3)
+                            {
+                                continue;
+                            }
+
+                            _dataGridView.Rows[i].Cells[0].Value = cells[0];
+                            _dataGridView.Rows[i].Cells[1].Value = cells[1];
+                            _dataGridView.Rows[i].Cells[2].Value = cells[2];
+                        }
                     }
                     catch (IOException ex)
                     {
                         MessageBox.Show("Error at file reading: " + ex.Message, "Error");
                     }
+                }
+            }
+        }
+
+        private void SaveTriangles(object sender, EventArgs eventArgs)
+        {
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Fun Vith Triangles (*.fvt)|*.fvt";
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    var contents = _dataGridView.Rows.Cast<DataGridViewRow>().Aggregate("",
+                        (current, row) =>
+                            current + (row.Cells[0].Value + "," + row.Cells[1].Value + "," + row.Cells[2].Value +
+                                       "\n"));
+                    File.WriteAllText(saveFileDialog.FileName, contents);
+                }
+                catch (IOException ex)
+                {
+                    MessageBox.Show("Error at file writing: " + ex.Message, "Error");
                 }
             }
         }

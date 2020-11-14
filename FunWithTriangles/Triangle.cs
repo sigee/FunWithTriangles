@@ -1,12 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace FunWithTriangles
 {
     public partial class Triangle : UserControl
     {
+        private new const int Padding = 20;
+
         public Triangle()
         {
             InitializeComponent();
@@ -24,6 +26,12 @@ namespace FunWithTriangles
             }
 
             return !(EdgeA + EdgeB < EdgeC) && !(EdgeA + EdgeC < EdgeB) && !(EdgeB + EdgeC < EdgeA);
+        }
+
+        private double CalculateAngle(double edge1, double edge2, double edge3)
+        {
+            var cos = (Math.Pow(edge1, 2) + Math.Pow(edge2, 2) - Math.Pow(edge3, 2)) / (2 * edge1 * edge2);
+            return RadianToDegree(Math.Acos(cos));
         }
 
         public double GetArea()
@@ -47,7 +55,33 @@ namespace FunWithTriangles
             return CalculateAngle(EdgeA, EdgeB, EdgeC);
         }
 
-        public Angle GetLargestAngle()
+        public bool IsEqual(Triangle otherTriangle)
+        {
+            double tolerance = 0.001;
+            return Math.Abs(GetLargestEdge() - otherTriangle.GetLargestEdge()) < tolerance &&
+                   Math.Abs(GetSmallestEdge() - otherTriangle.GetSmallestEdge()) < tolerance &&
+                   Math.Abs(GetTriangleHeight() - otherTriangle.GetTriangleHeight()) < tolerance;
+        }
+
+        private Angle GetSmallestAngle()
+        {
+            if (GetAlpha() < GetBeta() && GetAlpha() < GetGamma())
+            {
+                return Angle.Alpha;
+            }
+
+            return GetBeta() < GetGamma() ? Angle.Beta : Angle.Gamma;
+        }
+
+        private Angle GetMediumAngle()
+        {
+            var angles = new List<Angle> {Angle.Alpha, Angle.Beta, Angle.Gamma};
+            angles.Remove(GetSmallestAngle());
+            angles.Remove(GetLargestAngle());
+            return angles[0];
+        }
+
+        private Angle GetLargestAngle()
         {
             if (GetAlpha() >= GetBeta() && GetAlpha() >= GetGamma())
             {
@@ -62,12 +96,6 @@ namespace FunWithTriangles
             return Angle.Gamma;
         }
 
-        private double CalculateAngle(double edge1, double edge2, double edge3)
-        {
-            var cos = (Math.Pow(edge1, 2) + Math.Pow(edge2, 2) - Math.Pow(edge3, 2)) / (2 * edge1 * edge2);
-            return RadianToDegree(Math.Acos(cos));
-        }
-
         private double RadianToDegree(double angle)
         {
             return angle * (180.0 / Math.PI);
@@ -76,35 +104,117 @@ namespace FunWithTriangles
         protected override void OnPaint(PaintEventArgs paintEventArgs)
         {
             var g = paintEventArgs.Graphics;
-            g.FillRectangle(new SolidBrush(Color.DodgerBlue), 0, 0, Width, Height);
-            g.DrawString(Text, new Font("Arial", 13), new SolidBrush(Color.Black), 10, 10, new StringFormat());
-            if (!IsConstructable()) return;
-            // @TODO: Draw the triangle
-            Pen pen = new Pen(Color.Black);
-            var percentageBase = GetLargestEdge();
+            var brush = new SolidBrush(Color.Black);
+            var font = new Font("Arial", 12);
+            var format = new StringFormat();
+            if (!IsConstructable())
+            {
+                g.DrawString("A háromszög nem szerkeszthető meg!", font, brush, 0, 0, format);
+                return;
+            }
 
-            // Draw baseline
-            var baseLineLengthInPercentage = GetLargestEdge() / percentageBase;
-            var largestWidth = Width - 2 * 20;
-            var x2 = 20 + (Int64) (largestWidth * baseLineLengthInPercentage);
-            g.DrawLine(pen, 20, Height - 20, x2, Height - 20);
+            var pen = new Pen(Color.Black);
 
-            // Draw baseline height
-            var dashedPen = new Pen(Color.Gray);
-            dashedPen.DashStyle = DashStyle.Dash;
-            var x = (Int64) (Width / 2);
+            var corner1 = CalculateFirstCorner();
+            var corner2 = CalculateSecondCorner();
+            var corner3 = CalculateThirdCorner();
+            g.DrawLine(pen, corner1, corner2);
+            g.DrawLine(pen, corner1, corner3);
+            g.DrawLine(pen, corner2, corner3);
 
-            var heightLineLengthInPercentage = GetTriangleHeight() / percentageBase;
-            var y = Height - 20 - (Int64) (largestWidth * heightLineLengthInPercentage);
-            g.DrawLine(dashedPen, x, Height - 20, x, y);
+            g.DrawString(GetCornerAt(GetMediumAngle()), font, brush, corner1.X - 20, corner1.Y, format);
+            g.DrawString(GetCornerAt(GetSmallestAngle()), font, brush, corner2, format);
+            g.DrawString(GetCornerAt(GetLargestAngle()), font, brush, corner3.X - 10, corner3.Y - 20, format);
+
+            var lineCenter1 = CalculateFirstLineCenter();
+            var lineCenter2 = CalculateSecondLineCenter();
+            var lineCenter3 = CalculateThirdLineCenter();
+            g.DrawString(GetCornerAt(GetSmallestAngle()).ToLower(), font, brush, lineCenter1, format);
+            g.DrawString(GetCornerAt(GetMediumAngle()).ToLower(), font, brush, lineCenter2, format);
+            g.DrawString(GetCornerAt(GetLargestAngle()).ToLower(), font, brush, lineCenter3, format);
         }
 
-        public bool IsEqual(Triangle otherTriangle)
+        private Point CalculateFirstCorner()
         {
-            double tolerance = 0.001;
-            return Math.Abs(GetLargestEdge() - otherTriangle.GetLargestEdge()) < tolerance &&
-                   Math.Abs(GetSmallestEdge() - otherTriangle.GetSmallestEdge()) < tolerance &&
-                   Math.Abs(GetTriangleHeight() - otherTriangle.GetTriangleHeight()) < tolerance;
+            return new Point(Padding, Height - Padding);
+        }
+
+        private Point CalculateSecondCorner()
+        {
+            return new Point(Width - Padding, Height - Padding);
+        }
+
+        private Point CalculateThirdCorner()
+        {
+            var percentageBase = GetLargestEdge();
+            var largestWidth = Width - 2 * Padding;
+            var heightLineLengthInPercentage = GetTriangleHeight() / percentageBase;
+            var y = Height - 20 - (int) (largestWidth * heightLineLengthInPercentage);
+            var calculatedX = Math.Round(Math.Sqrt(Math.Pow(GetSmallestEdge(), 2) - Math.Pow(GetTriangleHeight(), 2)));
+            var calculatedXInPercentage = calculatedX / percentageBase;
+            return new Point(20 + (int) (largestWidth * calculatedXInPercentage), y);
+        }
+
+        private Point CalculateFirstLineCenter()
+        {
+            var percentageBase = GetLargestEdge();
+            var largestWidth = Width - 2 * Padding;
+            var heightLineLengthInPercentage = GetTriangleHeight() / percentageBase;
+            var calculatedX = Math.Round(Math.Sqrt(Math.Pow(GetSmallestEdge(), 2) - Math.Pow(GetTriangleHeight(), 2)));
+            var calculatedXInPercentage = calculatedX / percentageBase;
+            var labelX = Padding + (int) (largestWidth * (calculatedXInPercentage / 2));
+            var labelY = Height - Padding - (int) (largestWidth * (heightLineLengthInPercentage / 2));
+            return new Point(labelX - 20, labelY - 20);
+        }
+
+        private Point CalculateSecondLineCenter()
+        {
+            var percentageBase = GetLargestEdge();
+            var largestWidth = Width - 2 * Padding;
+            var heightLineLengthInPercentage = GetTriangleHeight() / percentageBase;
+            var labelY = Height - Padding - (int) (largestWidth * (heightLineLengthInPercentage / 2));
+            var calculatedX = Math.Round(Math.Sqrt(Math.Pow(GetMediumEdge(), 2) - Math.Pow(GetTriangleHeight(), 2)));
+            var calculatedXInPercentage = calculatedX / percentageBase;
+            var labelX = Width - Padding - (int) (largestWidth * (calculatedXInPercentage / 2));
+            return new Point(labelX, labelY - 20);
+        }
+
+        private Point CalculateThirdLineCenter()
+        {
+            return new Point(Width / 2, Height - 20);
+        }
+
+        private static string GetCornerAt(Angle angle)
+        {
+            if (angle.Equals(Angle.Alpha))
+            {
+                return "A";
+            }
+
+            if (angle.Equals(Angle.Beta))
+            {
+                return "B";
+            }
+
+            return "C";
+        }
+
+        private double GetSmallestEdge()
+        {
+            if (EdgeA < EdgeB && EdgeA < EdgeC)
+            {
+                return EdgeA;
+            }
+
+            return EdgeB < EdgeC ? EdgeB : EdgeC;
+        }
+
+        private double GetMediumEdge()
+        {
+            var edges = new List<Double> {EdgeA, EdgeB, EdgeC};
+            edges.Remove(GetSmallestEdge());
+            edges.Remove(GetLargestEdge());
+            return edges[0];
         }
 
         private double GetLargestEdge()
@@ -115,16 +225,6 @@ namespace FunWithTriangles
             }
 
             return EdgeB >= EdgeC ? EdgeB : EdgeC;
-        }
-
-        private double GetSmallestEdge()
-        {
-            if (EdgeA <= EdgeB && EdgeA <= EdgeC)
-            {
-                return EdgeA;
-            }
-
-            return EdgeB <= EdgeC ? EdgeB : EdgeC;
         }
 
         private double GetTriangleHeight()
