@@ -124,7 +124,7 @@ namespace FunWithTriangles
             var b = Math.Sqrt(-EdgeA + EdgeB + EdgeC);
             var c = Math.Sqrt(EdgeA - EdgeB + EdgeC);
             var d = Math.Sqrt(EdgeA + EdgeB - EdgeC);
-            return (a * b * c * d) / 2 * GetLargestEdge();
+            return (a * b * c * d) / (2 * GetLargestEdge());
         }
     }
 }
