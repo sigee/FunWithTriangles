@@ -21,22 +21,28 @@ namespace FunWithTriangles
             CreateDataGridView();
         }
 
-        private void Grid_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void CellEvents(object sender, DataGridViewCellEventArgs e)
         {
-            DataGridView grid = (DataGridView) sender;
-            var selectedRows = grid.SelectedRows;
-            if (selectedRows.Count == 1 && !selectedRows[0].IsNewRow)
+            var selectedRows = ((DataGridView) sender).SelectedRows;
+            if (selectedRows.Count != 1 || selectedRows[0].IsNewRow)
             {
-                Double.TryParse((string)selectedRows[0].Cells[0].Value, out double edgeA);
-                Double.TryParse((string)selectedRows[0].Cells[1].Value, out double edgeB);
-                Double.TryParse((string)selectedRows[0].Cells[2].Value, out double edgeC);
+                triangle.EdgeA = 0;
+                triangle.EdgeB = 0;
+                triangle.EdgeC = 0;
+                triangle.Text = "";
+            }
+            else
+            {
+                Double.TryParse((string) selectedRows[0].Cells[0].Value, out double edgeA);
+                Double.TryParse((string) selectedRows[0].Cells[1].Value, out double edgeB);
+                Double.TryParse((string) selectedRows[0].Cells[2].Value, out double edgeC);
                 triangle.EdgeA = edgeA;
                 triangle.EdgeB = edgeB;
                 triangle.EdgeC = edgeC;
 
                 triangle.Text = triangle.EdgeA + " | " + triangle.EdgeB + " | " + triangle.EdgeC;
-                triangle.Refresh();
             }
+            triangle.Refresh();
         }
 
         private void CreateTriangle()
@@ -63,7 +69,8 @@ namespace FunWithTriangles
 
             dataGridView.Columns.AddRange(edgeA, edgeB, edgeC);
 
-            dataGridView.CellClick += Grid_CellClick;
+            dataGridView.CellEnter += CellEvents;
+            dataGridView.CellValueChanged += CellEvents;
             foreach (var column in dataGridView.Columns)
             {
             }
