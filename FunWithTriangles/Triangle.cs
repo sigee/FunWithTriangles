@@ -88,5 +88,42 @@ namespace FunWithTriangles
             // @Note: The largest angle goes to the top
 //            g.DrawLine();
         }
+
+        public bool IsEqual(Triangle otherTriangle)
+        {
+            double tolerance = 0.001;
+            return Math.Abs(GetLargestEdge() - otherTriangle.GetLargestEdge()) < tolerance &&
+                   Math.Abs(GetSmallestEdge() - otherTriangle.GetSmallestEdge()) < tolerance &&
+                   Math.Abs(GetTriangleHeight() - otherTriangle.GetTriangleHeight()) < tolerance;
+        }
+
+        private double GetLargestEdge()
+        {
+            if (EdgeA >= EdgeB && EdgeA >= EdgeC)
+            {
+                return EdgeA;
+            }
+
+            return EdgeB >= EdgeC ? EdgeB : EdgeC;
+        }
+
+        private double GetSmallestEdge()
+        {
+            if (EdgeA <= EdgeB && EdgeA <= EdgeC)
+            {
+                return EdgeA;
+            }
+
+            return EdgeB <= EdgeC ? EdgeB : EdgeC;
+        }
+
+        private double GetTriangleHeight()
+        {
+            var a = Math.Sqrt(EdgeA + EdgeB + EdgeC);
+            var b = Math.Sqrt(-EdgeA + EdgeB + EdgeC);
+            var c = Math.Sqrt(EdgeA - EdgeB + EdgeC);
+            var d = Math.Sqrt(EdgeA + EdgeB - EdgeC);
+            return (a * b * c * d) / 2 * GetLargestEdge();
+        }
     }
 }
