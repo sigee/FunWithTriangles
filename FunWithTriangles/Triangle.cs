@@ -22,12 +22,7 @@ namespace FunWithTriangles
                 return false;
             }
 
-            if (EdgeA + EdgeB < EdgeC || EdgeA + EdgeC < EdgeB || EdgeB + EdgeC < EdgeA)
-            {
-                return false;
-            }
-
-            return true;
+            return !(EdgeA + EdgeB < EdgeC) && !(EdgeA + EdgeC < EdgeB) && !(EdgeB + EdgeC < EdgeA);
         }
 
         public double GetArea()
