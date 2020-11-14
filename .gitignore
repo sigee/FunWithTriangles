@@ -1,0 +1,8 @@
+FunWithTriangles.sln
+FunWithTriangles.sln.DotSettings.user
+.idea/
+FunWithTriangles/bin
+FunWithTriangles/obj
+FunWithTriangles.UnitTests/bin
+FunWithTriangles.UnitTests/obj
+packages/
