@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace FunWithTriangles
@@ -77,17 +78,25 @@ namespace FunWithTriangles
             var g = paintEventArgs.Graphics;
             g.FillRectangle(new SolidBrush(Color.DodgerBlue), 0, 0, Width, Height);
             g.DrawString(Text, new Font("Arial", 13), new SolidBrush(Color.Black), 10, 10, new StringFormat());
-            if (IsConstructable())
-            {
-                // @TODO: Draw the triangle
-                Pen pen = new Pen(Color.Black);
-                var percentageBase = GetLargestEdge();
+            if (!IsConstructable()) return;
+            // @TODO: Draw the triangle
+            Pen pen = new Pen(Color.Black);
+            var percentageBase = GetLargestEdge();
 
-                var lineLengthInPercentage = ((percentageBase / GetLargestEdge()) * 100);
-                var largestWidth = Width - 2 * 20;
-                var x2 = 20 + (Int64) (largestWidth * (lineLengthInPercentage / 100));
-                g.DrawLine(pen, 20, Height - 20, x2, Height - 20);
-            }
+            // Draw baseline
+            var baseLineLengthInPercentage = GetLargestEdge() / percentageBase;
+            var largestWidth = Width - 2 * 20;
+            var x2 = 20 + (Int64) (largestWidth * baseLineLengthInPercentage);
+            g.DrawLine(pen, 20, Height - 20, x2, Height - 20);
+
+            // Draw baseline height
+            var dashedPen = new Pen(Color.Gray);
+            dashedPen.DashStyle = DashStyle.Dash;
+            var x = (Int64) (Width / 2);
+
+            var heightLineLengthInPercentage = GetTriangleHeight() / percentageBase;
+            var y = Height - 20 - (Int64) (largestWidth * heightLineLengthInPercentage);
+            g.DrawLine(dashedPen, x, Height - 20, x, y);
         }
 
         public bool IsEqual(Triangle otherTriangle)
