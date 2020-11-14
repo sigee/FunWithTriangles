@@ -15,8 +15,6 @@ namespace FunWithTriangles
         public Form1()
         {
             InitializeComponent();
-            Width = 650;
-            Height = 600;
             CreateList();
             CreateMenu();
             CreateTriangle();
@@ -43,7 +41,7 @@ namespace FunWithTriangles
 
         private void CreateTriangle()
         {
-            triangle = new Triangle {Top = 25, Left = 520, Text = "Sigee"};
+            triangle = new Triangle {Top = 25, Left = 520, Width = 300, Height = 300};
             Controls.Add(triangle);
         }
 

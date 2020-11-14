@@ -9,8 +9,6 @@ namespace FunWithTriangles
         public Triangle()
         {
             InitializeComponent();
-            Width = 100;
-            Height = 100;
         }
 
         public double EdgeA { get; set; }
@@ -84,9 +82,17 @@ namespace FunWithTriangles
             var g = paintEventArgs.Graphics;
             g.FillRectangle(new SolidBrush(Color.DodgerBlue), 0, 0, Width, Height);
             g.DrawString(Text, new Font("Arial", 13), new SolidBrush(Color.Black), 10, 10, new StringFormat());
-            // @TODO: Draw the triangle
-            // @Note: The largest angle goes to the top
-//            g.DrawLine();
+            if (IsConstructable())
+            {
+                // @TODO: Draw the triangle
+                Pen pen = new Pen(Color.Black);
+                var percentageBase = GetLargestEdge();
+
+                var lineLengthInPercentage = ((percentageBase / GetLargestEdge()) * 100);
+                var largestWidth = Width - 2 * 20;
+                var x2 = 20 + (Int64) (largestWidth * (lineLengthInPercentage / 100));
+                g.DrawLine(pen, 20, Height - 20, x2, Height - 20);
+            }
         }
 
         public bool IsEqual(Triangle otherTriangle)
