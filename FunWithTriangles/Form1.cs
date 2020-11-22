@@ -18,7 +18,7 @@ namespace FunWithTriangles
             CreateDataGridView();
         }
 
-        private void CellEvents(object sender, DataGridViewCellEventArgs e)
+        private void CellEnterEvents(object sender, DataGridViewCellEventArgs e)
         {
             _triangle.EdgeA = 0;
             _triangle.EdgeB = 0;
@@ -26,26 +26,79 @@ namespace FunWithTriangles
             var selectedRows = ((DataGridView) sender).SelectedRows;
             if (selectedRows.Count == 1 && !selectedRows[0].IsNewRow)
             {
-                if (selectedRows[0].Cells[0].Value != null)
-                {
-                    double.TryParse(selectedRows[0].Cells[0].Value.ToString(), out var edgeA);
-                    _triangle.EdgeA = edgeA;
-                }
+                var selectedTriangle = GetTriangleFromRow(selectedRows[0]);
+                _triangle.EdgeA = selectedTriangle.EdgeA;
+                _triangle.EdgeB = selectedTriangle.EdgeB;
+                _triangle.EdgeC = selectedTriangle.EdgeC;
+            }
 
-                if (selectedRows[0].Cells[1].Value != null)
-                {
-                    double.TryParse(selectedRows[0].Cells[1].Value.ToString(), out var edgeB);
-                    _triangle.EdgeB = edgeB;
-                }
+            _triangle.Refresh();
+        }
 
-                if (selectedRows[0].Cells[2].Value != null)
+        private void CellChangedEvents(object sender, DataGridViewCellEventArgs e)
+        {
+            _triangle.EdgeA = 0;
+            _triangle.EdgeB = 0;
+            _triangle.EdgeC = 0;
+            var selectedRows = ((DataGridView) sender).SelectedRows;
+            if (selectedRows.Count == 1 && !selectedRows[0].IsNewRow)
+            {
+                var selectedTriangle = GetTriangleFromRow(selectedRows[0]);
+                _triangle.EdgeA = selectedTriangle.EdgeA;
+                _triangle.EdgeB = selectedTriangle.EdgeB;
+                _triangle.EdgeC = selectedTriangle.EdgeC;
+                selectedRows[0].Cells[3].Value = _triangle.GetArea();
+                selectedRows[0].Cells[4].Value = _triangle.GetPerimeter();
+
+                if (IsTriangleAlreadyInList(selectedRows[0]))
                 {
-                    double.TryParse(selectedRows[0].Cells[2].Value.ToString(), out var edgeC);
-                    _triangle.EdgeC = edgeC;
+                    MessageBox.Show("The triangle is already in the list!");
                 }
             }
 
             _triangle.Refresh();
+        }
+
+        private bool IsTriangleAlreadyInList(DataGridViewRow selectedRow)
+        {
+            var findItSelf = false;
+            var currentTriangle = GetTriangleFromRow(selectedRow);
+            foreach (DataGridViewRow row in _dataGridView.Rows)
+            {
+                var triangle = GetTriangleFromRow(row);
+                if (!currentTriangle.IsEqual(triangle)) continue;
+                if (findItSelf)
+                {
+                    return true;
+                }
+
+                findItSelf = true;
+            }
+
+            return false;
+        }
+
+        private static Triangle GetTriangleFromRow(DataGridViewRow row)
+        {
+            var edgeA = 0.0;
+            var edgeB = 0.0;
+            var edgeC = 0.0;
+            if (row.Cells[0].Value != null)
+            {
+                double.TryParse(row.Cells[0].Value.ToString(), out edgeA);
+            }
+
+            if (row.Cells[1].Value != null)
+            {
+                double.TryParse(row.Cells[1].Value.ToString(), out edgeB);
+            }
+
+            if (row.Cells[2].Value != null)
+            {
+                double.TryParse(row.Cells[2].Value.ToString(), out edgeC);
+            }
+
+            return new Triangle() {EdgeA = edgeA, EdgeB = edgeB, EdgeC = edgeC};
         }
 
         private void CreateTriangle()
@@ -75,8 +128,8 @@ namespace FunWithTriangles
             _dataGridView.RowCount = 11;
             _dataGridView.AllowUserToAddRows = false;
             _dataGridView.AllowUserToDeleteRows = false;
-            _dataGridView.CellEnter += CellEvents;
-            _dataGridView.CellValueChanged += CellEvents;
+            _dataGridView.CellEnter += CellEnterEvents;
+            _dataGridView.CellValueChanged += CellChangedEvents;
             Controls.Add(_dataGridView);
         }
 
@@ -114,33 +167,15 @@ namespace FunWithTriangles
                     }
 
                     var rowIndex = i;
-                    var edgeA = 0.0;
-                    var edgeB = 0.0;
-                    var edgeC = 0.0;
-                    if (_dataGridView.Rows[rowIndex].Cells[0].Value != null)
-                    {
-                        double.TryParse(_dataGridView.Rows[rowIndex].Cells[0].Value.ToString(), out edgeA);
-                    }
-
-                    if (_dataGridView.Rows[rowIndex].Cells[1].Value != null)
-                    {
-                        double.TryParse(_dataGridView.Rows[rowIndex].Cells[1].Value.ToString(), out edgeB);
-                    }
-
-                    if (_dataGridView.Rows[rowIndex].Cells[1].Value != null)
-                    {
-                        double.TryParse(_dataGridView.Rows[rowIndex].Cells[2].Value.ToString(), out edgeC);
-                    }
-
-                    var triangle = new Triangle() {EdgeA = edgeA, EdgeB = edgeB, EdgeC = edgeC};
+                    var triangle = GetTriangleFromRow(_dataGridView.Rows[rowIndex]);
                     Task.Factory.StartNew(() =>
                     {
-                        _dataGridView.Rows[rowIndex].Cells[3].Value = triangle.GetPerimeter();
+                        _dataGridView.Rows[rowIndex].Cells[3].Value = triangle.GetArea();
                     });
 
                     Task.Factory.StartNew(() =>
                     {
-                        _dataGridView.Rows[rowIndex].Cells[4].Value = triangle.GetArea();
+                        _dataGridView.Rows[rowIndex].Cells[4].Value = triangle.GetPerimeter();
                     });
                 }
 
