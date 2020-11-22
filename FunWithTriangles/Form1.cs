@@ -96,67 +96,61 @@ namespace FunWithTriangles
         private void OpenTriangles(object sender, EventArgs eventArgs)
         {
             var openFileDialog = new OpenFileDialog {Filter = "Fun Vith Triangles (*.fvt)|*.fvt"};
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            if (openFileDialog.ShowDialog() != DialogResult.OK) return;
+            if (!File.Exists(openFileDialog.FileName)) return;
+            try
             {
-                if (File.Exists(openFileDialog.FileName))
+                var reader = new BinaryReader(File.Open(openFileDialog.FileName, FileMode.Open));
+                for (var i = 0; i < _dataGridView.RowCount - 1; i++)
                 {
-                    try
+                    for (var j = 0; j < 3; j++)
                     {
-                        var reader = new BinaryReader(File.Open(openFileDialog.FileName, FileMode.Open));
-                        for (var i = 0; i < _dataGridView.RowCount - 1; i++)
+                        var value = reader.ReadDouble();
+                        if (value != 0.0)
                         {
-                            for (var j = 0; j < 3; j++)
-                            {
-                                var value = reader.ReadDouble();
-                                if (value != 0.0)
-                                {
-                                    _dataGridView.Rows[i].Cells[j].Value = value;
-                                }
-                            }
+                            _dataGridView.Rows[i].Cells[j].Value = value;
                         }
-
-                        reader.Close();
-                    }
-                    catch (IOException ex)
-                    {
-                        MessageBox.Show("Error at file reading: " + ex.Message, "Error");
                     }
                 }
+
+                reader.Close();
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show("Error at file reading: " + ex.Message, "Error");
             }
         }
 
         private void SaveTriangles(object sender, EventArgs eventArgs)
         {
             var saveFileDialog = new SaveFileDialog {Filter = "Fun Vith Triangles (*.fvt)|*.fvt"};
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            if (saveFileDialog.ShowDialog() != DialogResult.OK) return;
+            try
             {
-                try
+                var writer = new BinaryWriter(File.Open(saveFileDialog.FileName, FileMode.Create));
+                foreach (DataGridViewRow row in _dataGridView.Rows)
                 {
-                    var writer = new BinaryWriter(File.Open(saveFileDialog.FileName, FileMode.Create));
-                    foreach (DataGridViewRow row in _dataGridView.Rows)
+                    for (var i = 0; i < 3; i++)
                     {
-                        for (var i = 0; i < 3; i++)
+                        double edge;
+                        if (row.Cells[i].Value != null)
                         {
-                            double edge;
-                            if (row.Cells[i].Value != null)
-                            {
-                                double.TryParse(row.Cells[i].Value.ToString(), out edge);
-                            }
-                            else
-                            {
-                                edge = 0.0;
-                            }
-
-                            writer.Write(edge);
+                            double.TryParse(row.Cells[i].Value.ToString(), out edge);
                         }
-                    }
+                        else
+                        {
+                            edge = 0.0;
+                        }
 
-                    writer.Close();
+                        writer.Write(edge);
+                    }
                 }
-                catch (IOException ex)
-                {
-                    MessageBox.Show("Error at file writing: " + ex.Message, "Error");
-                }
+
+                writer.Close();
+            }
+            catch (IOException ex)
+            {
+                MessageBox.Show("Error at file writing: " + ex.Message, "Error");
             }
         }
     }
