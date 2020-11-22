@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace FunWithTriangles
@@ -20,21 +19,29 @@ namespace FunWithTriangles
 
         private void CellEvents(object sender, DataGridViewCellEventArgs e)
         {
+            _triangle.EdgeA = 0;
+            _triangle.EdgeB = 0;
+            _triangle.EdgeC = 0;
             var selectedRows = ((DataGridView) sender).SelectedRows;
-            if (selectedRows.Count != 1 || selectedRows[0].IsNewRow)
+            if (selectedRows.Count == 1 && !selectedRows[0].IsNewRow)
             {
-                _triangle.EdgeA = 0;
-                _triangle.EdgeB = 0;
-                _triangle.EdgeC = 0;
-            }
-            else
-            {
-                Double.TryParse((string) selectedRows[0].Cells[0].Value, out double edgeA);
-                Double.TryParse((string) selectedRows[0].Cells[1].Value, out double edgeB);
-                Double.TryParse((string) selectedRows[0].Cells[2].Value, out double edgeC);
-                _triangle.EdgeA = edgeA;
-                _triangle.EdgeB = edgeB;
-                _triangle.EdgeC = edgeC;
+                if (selectedRows[0].Cells[0].Value != null)
+                {
+                    double.TryParse(selectedRows[0].Cells[0].Value.ToString(), out var edgeA);
+                    _triangle.EdgeA = edgeA;
+                }
+
+                if (selectedRows[0].Cells[1].Value != null)
+                {
+                    double.TryParse(selectedRows[0].Cells[1].Value.ToString(), out var edgeB);
+                    _triangle.EdgeB = edgeB;
+                }
+
+                if (selectedRows[0].Cells[2].Value != null)
+                {
+                    double.TryParse(selectedRows[0].Cells[2].Value.ToString(), out var edgeC);
+                    _triangle.EdgeC = edgeC;
+                }
             }
 
             _triangle.Refresh();
@@ -88,33 +95,27 @@ namespace FunWithTriangles
 
         private void OpenTriangles(object sender, EventArgs eventArgs)
         {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Fun Vith Triangles (*.fvt)|*.fvt";
+            var openFileDialog = new OpenFileDialog {Filter = "Fun Vith Triangles (*.fvt)|*.fvt"};
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 if (File.Exists(openFileDialog.FileName))
                 {
                     try
                     {
-                        var contents = File.ReadAllText(openFileDialog.FileName);
-                        var rows = contents.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
-                        for (var i = 0; i < rows.Length; i++)
+                        var reader = new BinaryReader(File.Open(openFileDialog.FileName, FileMode.Open));
+                        for (var i = 0; i < _dataGridView.RowCount - 1; i++)
                         {
-                            if (_dataGridView.Rows.Count < i)
+                            for (var j = 0; j < 3; j++)
                             {
-                                continue;
+                                var value = reader.ReadDouble();
+                                if (value != 0.0)
+                                {
+                                    _dataGridView.Rows[i].Cells[j].Value = value;
+                                }
                             }
-
-                            var cells = rows[i].Split(',');
-                            if (cells.Length != 3)
-                            {
-                                continue;
-                            }
-
-                            _dataGridView.Rows[i].Cells[0].Value = cells[0];
-                            _dataGridView.Rows[i].Cells[1].Value = cells[1];
-                            _dataGridView.Rows[i].Cells[2].Value = cells[2];
                         }
+
+                        reader.Close();
                     }
                     catch (IOException ex)
                     {
@@ -126,17 +127,31 @@ namespace FunWithTriangles
 
         private void SaveTriangles(object sender, EventArgs eventArgs)
         {
-            var saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Fun Vith Triangles (*.fvt)|*.fvt";
+            var saveFileDialog = new SaveFileDialog {Filter = "Fun Vith Triangles (*.fvt)|*.fvt"};
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    var contents = _dataGridView.Rows.Cast<DataGridViewRow>().Aggregate("",
-                        (current, row) =>
-                            current + (row.Cells[0].Value + "," + row.Cells[1].Value + "," + row.Cells[2].Value +
-                                       "\n"));
-                    File.WriteAllText(saveFileDialog.FileName, contents);
+                    var writer = new BinaryWriter(File.Open(saveFileDialog.FileName, FileMode.Create));
+                    foreach (DataGridViewRow row in _dataGridView.Rows)
+                    {
+                        for (var i = 0; i < 3; i++)
+                        {
+                            double edge;
+                            if (row.Cells[i].Value != null)
+                            {
+                                double.TryParse(row.Cells[i].Value.ToString(), out edge);
+                            }
+                            else
+                            {
+                                edge = 0.0;
+                            }
+
+                            writer.Write(edge);
+                        }
+                    }
+
+                    writer.Close();
                 }
                 catch (IOException ex)
                 {
