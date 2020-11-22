@@ -28,12 +28,6 @@ namespace FunWithTriangles
             return !(EdgeA + EdgeB < EdgeC) && !(EdgeA + EdgeC < EdgeB) && !(EdgeB + EdgeC < EdgeA);
         }
 
-        private double CalculateAngle(double edge1, double edge2, double edge3)
-        {
-            var cos = (Math.Pow(edge1, 2) + Math.Pow(edge2, 2) - Math.Pow(edge3, 2)) / (2 * edge1 * edge2);
-            return RadianToDegree(Math.Acos(cos));
-        }
-
         public double GetPerimeter()
         {
             if (!IsConstructable()) return 0.0;
@@ -68,6 +62,12 @@ namespace FunWithTriangles
             return Math.Abs(GetLargestEdge() - otherTriangle.GetLargestEdge()) < tolerance &&
                    Math.Abs(GetSmallestEdge() - otherTriangle.GetSmallestEdge()) < tolerance &&
                    Math.Abs(GetTriangleHeight() - otherTriangle.GetTriangleHeight()) < tolerance;
+        }
+
+        private double CalculateAngle(double edge1, double edge2, double edge3)
+        {
+            var cos = (Math.Pow(edge1, 2) + Math.Pow(edge2, 2) - Math.Pow(edge3, 2)) / (2 * edge1 * edge2);
+            return RadianToDegree(Math.Acos(cos));
         }
 
         private Angle GetSmallestAngle()
