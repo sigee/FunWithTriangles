@@ -34,8 +34,15 @@ namespace FunWithTriangles
             return RadianToDegree(Math.Acos(cos));
         }
 
+        public double GetPerimeter()
+        {
+            if (!IsConstructable()) return 0.0;
+            return EdgeA + EdgeB + EdgeC;
+        }
+
         public double GetArea()
         {
+            if (!IsConstructable()) return 0.0;
             var s = (EdgeA + EdgeB + EdgeC) / 2;
             return Math.Sqrt(s * (s - EdgeA) * (s - EdgeB) * (s - EdgeC));
         }
@@ -57,7 +64,7 @@ namespace FunWithTriangles
 
         public bool IsEqual(Triangle otherTriangle)
         {
-            double tolerance = 0.001;
+            const double tolerance = 0.001;
             return Math.Abs(GetLargestEdge() - otherTriangle.GetLargestEdge()) < tolerance &&
                    Math.Abs(GetSmallestEdge() - otherTriangle.GetSmallestEdge()) < tolerance &&
                    Math.Abs(GetTriangleHeight() - otherTriangle.GetTriangleHeight()) < tolerance;

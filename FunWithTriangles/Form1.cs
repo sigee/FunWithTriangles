@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace FunWithTriangles
@@ -101,7 +102,7 @@ namespace FunWithTriangles
             try
             {
                 var reader = new BinaryReader(File.Open(openFileDialog.FileName, FileMode.Open));
-                for (var i = 0; i < _dataGridView.RowCount - 1; i++)
+                for (var i = 0; i < _dataGridView.RowCount; i++)
                 {
                     for (var j = 0; j < 3; j++)
                     {
@@ -111,6 +112,36 @@ namespace FunWithTriangles
                             _dataGridView.Rows[i].Cells[j].Value = value;
                         }
                     }
+
+                    var rowIndex = i;
+                    var edgeA = 0.0;
+                    var edgeB = 0.0;
+                    var edgeC = 0.0;
+                    if (_dataGridView.Rows[rowIndex].Cells[0].Value != null)
+                    {
+                        double.TryParse(_dataGridView.Rows[rowIndex].Cells[0].Value.ToString(), out edgeA);
+                    }
+
+                    if (_dataGridView.Rows[rowIndex].Cells[1].Value != null)
+                    {
+                        double.TryParse(_dataGridView.Rows[rowIndex].Cells[1].Value.ToString(), out edgeB);
+                    }
+
+                    if (_dataGridView.Rows[rowIndex].Cells[1].Value != null)
+                    {
+                        double.TryParse(_dataGridView.Rows[rowIndex].Cells[2].Value.ToString(), out edgeC);
+                    }
+
+                    var triangle = new Triangle() {EdgeA = edgeA, EdgeB = edgeB, EdgeC = edgeC};
+                    Task.Factory.StartNew(() =>
+                    {
+                        _dataGridView.Rows[rowIndex].Cells[3].Value = triangle.GetPerimeter();
+                    });
+
+                    Task.Factory.StartNew(() =>
+                    {
+                        _dataGridView.Rows[rowIndex].Cells[4].Value = triangle.GetArea();
+                    });
                 }
 
                 reader.Close();
